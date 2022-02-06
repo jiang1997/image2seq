@@ -1,8 +1,16 @@
 # image2seq
 
-![alt text](201031032.jpg "Title")
+<img src="201031032.jpg" alt="drawing" width="200"/><img src="1219481679.jpg" alt="drawing" width="200"/>
 
-![alt text](1219481679.jpg "Title")
+# 算法
 
+简单说就是贪心策略的搜索
+绕圆周取了180个点。
+从当前点出发搜索其余点，找到使得  这俩点连线后   当前图像与原图误差最小的 点。然后连上这俩点，更新当前点。
+然后上面的步骤循环几千次就行了。
+
+每次画线 都只是减少 这条线经过像素的 灰度值。最后也就有了灰度变化。
+
+# todo
 need to be impreved.
 
