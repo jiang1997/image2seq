@@ -80,7 +80,6 @@ python main.py 201031032.jpg -o output --strategy greedy --num-starts 1 --candid
 image2seq/
 ├── main.py                 # CLI 入口
 ├── requirements.txt
-├── generate.ipynb          # 旧版 notebook（参考）
 └── image2seq/
     ├── physics/            # 物理层：线怎么盖、覆盖率怎么算
     │   ├── protocol.py     # LineSimulator 接口
