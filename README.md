@@ -2,7 +2,7 @@
 
 用圆周锚点之间的弦线，将灰度图近似还原为绕线画（String Art）。
 
-<img src="201031032.jpg" alt="input" width="200"/> <img src="1219481679.jpg" alt="input" width="200"/>
+<img src="portrait.jpg" alt="原图" width="200"/> <img src="portrait_string_art.jpg" alt="绕线画结果" width="200"/>
 
 ## 算法概述
 
@@ -29,7 +29,7 @@ python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-python main.py 201031032.jpg -o output
+python main.py portrait.jpg -o output
 ```
 
 ## 命令行参数
@@ -58,10 +58,10 @@ python main.py 201031032.jpg -o output
 
 ```bash
 # 质量优先（默认）
-python main.py 201031032.jpg -o output --strategy beam --beam-width 6 --num-starts 2
+python main.py portrait.jpg -o output --strategy beam --beam-width 6 --num-starts 2
 
 # 速度优先
-python main.py 201031032.jpg -o output --strategy greedy --num-starts 1 --candidate-pool 0
+python main.py portrait.jpg -o output --strategy greedy --num-starts 1 --candidate-pool 0
 ```
 
 ## 输出
