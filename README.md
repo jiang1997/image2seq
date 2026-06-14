@@ -1,28 +1,30 @@
 # image2seq
 
-用圆周锚点之间的弦线，将灰度图近似还原为绕线画（String Art）。
+**English** | [中文](README.zh-CN.md)
 
-<img src="portrait.jpg" alt="原图" width="200"/> <img src="portrait_string_art.jpg" alt="绕线画结果" width="200"/>
+Approximate a grayscale image as string art by drawing chords between anchor points on a circle.
 
-## 算法概述
+<img src="portrait.jpg" alt="input" width="200"/> <img src="portrait_string_art.jpg" alt="string art result" width="200"/>
 
-1. 在画布边缘圆周上均匀放置锚点（默认 180 个）
-2. 从当前锚点出发，选一条弦线画到下一个锚点
-3. 重复上述步骤，输出锚点访问序列 `sequence`
+## Overview
 
-物理模型采用 **块覆盖率 + 不透明 union**（参考 String Art 论文思路）：
+1. Place anchors evenly on a circle around the canvas (180 by default)
+2. From the current anchor, draw a chord to the next anchor
+3. Repeat until done, producing an anchor visit sequence `sequence`
 
-- 真实黑线**不透明**：同一位置重叠不会变更黑
-- 灰度由**局部覆盖率**决定：一个 block 内被线盖住的子像素比例 ≈ 目标灰度
-- 高分辨率模拟（`block_size` 倍）+ 低分辨率目标图对比
+The physical model uses **block coverage with opaque union** (inspired by string art literature):
 
-优化策略（默认 **Beam Search + 多起点**）：
+- Real black thread is **opaque**: overlapping lines do not get darker at the same pixel
+- Tone comes from **local coverage**: the fraction of covered sub-pixels in each block approximates the target gray level
+- High-resolution simulation (`block_size` scale) compared against a low-resolution target image
 
-- **Greedy**：每步选误差下降最大的弦，速度快
-- **Beam**：保留 top-k 条候选路径，缓解贪心短视
-- **Multi-start**：从多个起点各跑一遍，取最优结果
+Optimization (default: **beam search + multi-start**):
 
-## 快速开始
+- **Greedy**: pick the chord with the largest error reduction each step — fast
+- **Beam**: keep the top-k partial paths to reduce greedy myopia
+- **Multi-start**: run from several starting anchors and keep the best result
+
+## Quick start
 
 ```bash
 python3 -m venv .venv
@@ -32,71 +34,71 @@ pip install -r requirements.txt
 python main.py portrait.jpg -o output
 ```
 
-## 命令行参数
+## CLI options
 
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `input` | — | 输入图像路径 |
-| `-o, --output` | `output` | 输出目录 |
-| `--radius` | `100` | 锚点圆半径（图像尺寸 = 2r+1） |
-| `--anchors` | `180` | 圆周锚点数量 |
-| `--block-size` | `8` | 覆盖率 block 缩放倍数 |
-| `--line-width` | `2` | 线宽（高分辨率像素） |
-| `--max-iter` | `5000` | 最大线数 |
-| `--metric` | `l2` | 覆盖率误差：`l1` / `l2` |
-| `--importance` | `3.0` | 边缘权重（0 关闭） |
-| `--strategy` | `beam` | 优化策略：`greedy` / `beam` |
-| `--beam-width` | `8` | Beam Search 宽度 |
-| `--num-starts` | `4` | 多起点数量 |
-| `--candidate-pool` | `60` | 每步采样候选数（0 = 全部） |
-| `--min-improvement` | `0.01` | 低于此改进量可停止 |
-| `--min-lines` | `0` | 最少线数（未达不提前停） |
-| `--seed` | `42` | 随机种子 |
-| `--progress` | `500` | 进度打印间隔（0 关闭） |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `input` | — | Input image path |
+| `-o, --output` | `output` | Output directory |
+| `--radius` | `100` | Anchor circle radius (image size = 2r+1) |
+| `--anchors` | `180` | Number of anchors on the circle |
+| `--block-size` | `8` | Coverage block scale factor |
+| `--line-width` | `2` | Thread width in high-res pixels |
+| `--max-iter` | `5000` | Maximum number of lines |
+| `--metric` | `l2` | Coverage error metric: `l1` / `l2` |
+| `--importance` | `3.0` | Edge importance weight (0 disables) |
+| `--strategy` | `beam` | Optimizer: `greedy` / `beam` |
+| `--beam-width` | `8` | Beam search width |
+| `--num-starts` | `4` | Number of starting anchors |
+| `--candidate-pool` | `60` | Candidates sampled per step (0 = all) |
+| `--min-improvement` | `0.01` | Stop when improvement falls below this |
+| `--min-lines` | `0` | Minimum lines before early stopping |
+| `--seed` | `42` | Random seed |
+| `--progress` | `500` | Progress print interval (0 disables) |
 
-### 示例
+### Examples
 
 ```bash
-# 质量优先（默认）
+# Quality-first (default settings)
 python main.py portrait.jpg -o output --strategy beam --beam-width 6 --num-starts 2
 
-# 速度优先
+# Speed-first
 python main.py portrait.jpg -o output --strategy greedy --num-starts 1 --candidate-pool 0
 ```
 
-## 输出
+## Output
 
-| 文件 | 说明 |
-|------|------|
-| `render.png` | 渲染预览 |
-| `target.png` | 缩放后的目标图 |
-| `sequence.npy` | 锚点序列 `(N, 2)`，坐标为 `(row, col)` |
-| `coverage.npy` | 低分辨率覆盖率图 |
-| `summary.txt` | 迭代数、最终误差 |
+| File | Description |
+|------|-------------|
+| `render.png` | Rendered preview |
+| `target.png` | Resized target image |
+| `sequence.npy` | Anchor sequence `(N, 2)` as `(row, col)` |
+| `coverage.npy` | Low-resolution coverage map |
+| `summary.txt` | Iteration count and final error |
 
-## 项目结构
+## Project layout
 
 ```
 image2seq/
-├── main.py                 # CLI 入口
+├── main.py                 # CLI entry point
 ├── requirements.txt
 └── image2seq/
-    ├── physics/            # 物理层：线怎么盖、覆盖率怎么算
-    │   ├── protocol.py     # LineSimulator 接口
-    │   ├── lines.py        # Bresenham 光栅化
+    ├── physics/            # How lines cover the canvas
+    │   ├── protocol.py     # LineSimulator interface
+    │   ├── lines.py        # Bresenham rasterization
     │   └── simulator.py    # BlockCoverageSimulator
-    ├── optimizer/          # 优化层：选哪条线
+    ├── optimizer/          # Which line to draw next
     │   ├── greedy.py
     │   ├── beam.py
     │   ├── multi_start.py
     │   └── factory.py
-    ├── types.py            # 配置与结果类型
-    └── io.py               # 图像读写、结果保存
+    ├── types.py            # Config and result types
+    └── io.py               # Image I/O and result saving
 ```
 
-物理层与优化层通过 `LineSimulator` 接口解耦，可独立替换物理模型或搜索策略。
+Physics and optimization are decoupled via the `LineSimulator` interface, so either layer can be swapped independently.
 
-## 参考
+## References
 
 - [Birsak et al. 2018 — String Art](https://doi.org/10.1111/cgf.13359)
 - [Demoussel et al. 2022 — A Greedy Algorithm for Generative String Art](https://hal.science/hal-03901755)
